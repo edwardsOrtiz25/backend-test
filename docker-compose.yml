@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+  backendnest:
+    image: backendnest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+  wordpress:
+    image: wordpress
+    ports:
+    - "7070:70"
+    environment:
+    - WORDPRESS_DB_HOST=db
+    - WORDPRESS_DB_USER=user-wordpress
+    - WORDPRESS_DB_PASSWORD=pass-wordpress
+    - WORDPRESS_DB_NAME=wordpress
+       
+
+  db:
+    image: mysql
+    volumes:
+    - db_data:/var/lib/mysql
+    environment:
+    - MYSQL_ROOT_PASSWORD=root-mysql
+    - MYSQL_DATABASE=wordpress
+    - MYSQL_USER=user-worpress
+    - MYSQL_PASSWORD=pass-wordpress
+
+ 
+
+volumes:
+  db_data:
+
