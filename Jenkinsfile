@@ -9,43 +9,30 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('SonarQube Test Connection') {
             steps {
-                checkout scm
-            }
-        }
+                script {
+                    echo "Probando conexión con SonarQube..."
 
-        stage('Build') {
-            steps {
-                echo "Compilando proyecto..."
-                // Ajusta este comando según tu proyecto:
-                // Para .NET:
-                bat 'dotnet build'
-                // Para Node.js:
-                // sh 'npm install && npm run build'
-                // Para Maven:
-                // sh 'mvn clean install'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('MySonarQube') {
-                    // Para .NET:
-                    bat "dotnet sonarscanner begin /k:\"mi-proyecto\" /d:sonar.login=\"${SONARQUBE_TOKEN}\""
-                    bat "dotnet build"
-                    bat "dotnet sonarscanner end /d:sonar.login=\"${SONARQUBE_TOKEN}\""
-
-                    // Para Node o genérico puedes usar:
-                    // sh "sonar-scanner -Dsonar.projectKey=mi-proyecto -Dsonar.sources=. -Dsonar.login=${SONARQUBE_TOKEN}"
+                    withSonarQubeEnv('MySonarQube') {
+                        // Ejecuta un comando de sonar-scanner para validar conexión
+                        // En Windows se puede usar bat
+                        bat """
+                        sonar-scanner ^
+                            -Dsonar.projectKey=prueba-jenkins ^
+                            -Dsonar.sources=. ^
+                            -Dsonar.host.url=%SONAR_HOST_URL% ^
+                            -Dsonar.login=%SONARQUBE_TOKEN%
+                        """
+                    }
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
                 }
             }
         }
@@ -53,7 +40,7 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline finalizado."
+            echo "Prueba de conexión SonarQube finalizada."
         }
     }
 }
