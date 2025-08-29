@@ -21,15 +21,14 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli'
-                    args '-v %WORKSPACE%:/usr/src -w /usr/src'
-                }
-            }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'   // aquí DEBE ser sh porque es dentro del contenedor Linux
+                    bat """
+                        docker run --rm ^
+                        -v %CD%:/usr/src ^
+                        -w /usr/src ^
+                        sonarsource/sonar-scanner-cli sonar-scanner
+                    """
                 }
             }
         }
