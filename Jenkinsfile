@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     stages {
-        stage('Build Docker Image') {
+        stage('Install dependencies') {
             steps {
-                bat 'docker build -t backend-test .'
+                bat 'npm install'
             }
         }
-        stage('Run Docker Container') {
+        stage('Build') {
             steps {
-                bat 'docker run -d -p 4000:4000 --name backend-test backend-test'
+                bat 'npm run build'
             }
         }
     }
