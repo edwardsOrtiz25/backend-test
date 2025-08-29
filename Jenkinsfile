@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Nexus y Kubernetes
-        NEXUS_URL = 'http://localhost:8082'
+        NEXUS_URL = 'localhost:8082'          // Solo host:port, sin http:// en tags
         NEXUS_CRED = 'nexus-credentials'
         K8S_CRED = 'k8s-cred'
         IMAGE_NAME = 'backend-test'
@@ -63,6 +63,7 @@ pipeline {
                 script {
                     echo "Construyendo imagen Docker..."
                     bat "docker build -t %IMAGE_NAME%:latest ."
+                    // Tag usando formato correcto para Docker
                     bat "docker tag %IMAGE_NAME%:latest %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
                 }
             }
@@ -71,7 +72,7 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    docker.withRegistry("%NEXUS_URL%", "%NEXUS_CRED%") {
+                    docker.withRegistry("http://%NEXUS_URL%", "%NEXUS_CRED%") {
                         echo "Subiendo imagen Docker con tag latest y build number..."
                         bat "docker push %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:latest"
                         bat "docker push %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
