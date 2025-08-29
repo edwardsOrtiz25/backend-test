@@ -1,61 +1,59 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Install dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
+    environment {
+        // ID del servidor SonarQube configurado en Jenkins
+        SONARQUBE_SERVER = 'MySonarQube'
+        // Token almacenado en Jenkins como Secret Text
+        SONARQUBE_TOKEN = credentials('sonar-token')
+    }
 
-        stage('Test') {
+    stages {
+        stage('Checkout') {
             steps {
-                bat 'npm run test:cov'
+                checkout scm
             }
         }
 
         stage('Build') {
             steps {
-                bat 'npm run build'
+                echo "Compilando proyecto..."
+                // Ajusta este comando según tu proyecto:
+                // Para .NET:
+                bat 'dotnet build'
+                // Para Node.js:
+                // sh 'npm install && npm run build'
+                // Para Maven:
+                // sh 'mvn clean install'
             }
         }
-
-        stage('Test K8s Connection') {
-            steps {
-                withKubeConfig([credentialsId: 'k8s-cred']) {
-                    bat 'kubectl get nodes'
-                }
-            }
-        } // ← Aquí se cerró correctamente el stage
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    bat """
-                        docker run --rm ^
-                        -v %CD%:/usr/src ^
-                        -w /usr/src ^
-                        sonarsource/sonar-scanner-cli sonar-scanner
-                    """
+                withSonarQubeEnv('MySonarQube') {
+                    // Para .NET:
+                    bat "dotnet sonarscanner begin /k:\"mi-proyecto\" /d:sonar.login=\"${SONARQUBE_TOKEN}\""
+                    bat "dotnet build"
+                    bat "dotnet sonarscanner end /d:sonar.login=\"${SONARQUBE_TOKEN}\""
+
+                    // Para Node o genérico puedes usar:
+                    // sh "sonar-scanner -Dsonar.projectKey=mi-proyecto -Dsonar.sources=. -Dsonar.login=${SONARQUBE_TOKEN}"
                 }
             }
         }
 
-        stage('Check Docker') {
+        stage('Quality Gate') {
             steps {
-                bat 'docker info'
-            }
-        }
-
-        stage('Etapa de empaquetado y delivery') {
-            steps {
-                script {
-                    docker.withRegistry('http://localhost:8082', 'nexus-credentials') {
-                        bat 'docker tag backend-test:latest localhost:8082/docker-hosted/backend-test:latest'
-                        bat 'docker push localhost:8082/docker-hosted/backend-test:latest'
-                    }
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finalizado."
         }
     }
 }
