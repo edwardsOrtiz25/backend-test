@@ -18,5 +18,11 @@ pipeline {
                 bat 'npm run build'
             }
         }
+
+        stage ('Etapa de empaquetado y delivery'){
+          steps {
+            bat 'docker build -t backend-test .'
+          }
+        }
     }
 }
