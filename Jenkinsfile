@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Variables de Nexus y Kubernetes
+        // Nexus y Kubernetes
         NEXUS_URL = 'http://localhost:8082'
         NEXUS_CRED = 'nexus-credentials'
         K8S_CRED = 'k8s-cred'
@@ -34,10 +34,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Nombre que le pusiste en "Configure System" del plugin
-                    echo "Ejecutando análisis SonarQube..."
+                withSonarQubeEnv('SonarQube') { // Nombre de la configuración en Jenkins
+                    echo "Ejecutando análisis SonarQube con npx..."
                     bat """
-                    sonar-scanner ^
+                    npx sonarqube-scanner ^
                         -Dsonar.projectKey=backend-test ^
                         -Dsonar.sources=. ^
                         -Dsonar.host.url=%SONAR_HOST_URL% ^
