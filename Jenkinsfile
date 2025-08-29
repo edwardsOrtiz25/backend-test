@@ -1,11 +1,15 @@
 pipeline {
-    agent {
-        docker { image 'node:18' }
-    }
+    agent any
+
     stages {
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'npm install'
+                bat 'docker build -t backend-test .'
+            }
+        }
+        stage('Run Docker Container') {
+            steps {
+                bat 'docker run -d -p 4000:4000 --name backend-test backend-test'
             }
         }
     }
