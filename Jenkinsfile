@@ -33,7 +33,12 @@ pipeline {
                 bat 'docker push localhost:8082/docker-hosted/backend-test:latest'
 
             }
+              docker.withRegistry('','docker-hub'){
+                bat 'docker build -t backend-test .'
+                bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
+                bat 'docker push edwardsortiz25/backend-test'
 
+            }
 
            }
             
