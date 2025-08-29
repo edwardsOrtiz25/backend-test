@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        sonarScanner 'SonarQubeScanner'   
-    }
-
     stages {
         stage('Install dependencies') {
             steps {
@@ -26,7 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {   
+                withSonarQubeEnv('SonarQube') { // Nombre del servidor configurado en Jenkins
                     bat """
                         sonar-scanner ^
                         -Dsonar.projectKey=backend-test ^
