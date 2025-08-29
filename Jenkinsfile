@@ -22,14 +22,16 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Nombre del servidor configurado en Jenkins
-                    bat """
-                        sonar-scanner ^
-                        -Dsonar.projectKey=backend-test ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.login=%SONARQUBE_AUTH_TOKEN%
-                    """
+                script {
+                    // Obtener la ruta de SonarQube Scanner configurado en Jenkins
+                    def scannerHome = tool 'SonarQubeScanner' // Nombre de tu instalación en Global Tool Configuration
+                    withSonarQubeEnv('SonarQube') {        // Nombre del servidor SonarQube en Jenkins
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ^
+                            -Dsonar.projectKey=backend-test ^
+                            -Dsonar.sources=. ^
+                            -Dsonar.host.url=http://localhost:8084 ^
+                            -Dsonar.login=%SONARQUBE_AUTH_TOKEN%"
+                    }
                 }
             }
         }
