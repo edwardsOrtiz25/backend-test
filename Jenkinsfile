@@ -7,11 +7,4 @@ pipeline {
             }
         }
     }
-    stages{
-        stage('Build 2'){
-            steps{
-                echo 'Building... 2'
-            }
-        }
-    }
-}
+    
