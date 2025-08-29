@@ -19,14 +19,14 @@ pipeline {
                 bat 'npm run build'
             }
         }
-         stage('Test K8s Connection') {
+
+        stage('Test K8s Connection') {
             steps {
-                // credentialsId debe coincidir con el Secret File que creaste
                 withKubeConfig([credentialsId: 'k8s-cred']) {
                     bat 'kubectl get nodes'
                 }
             }
-
+        } // ← Aquí se cerró correctamente el stage
 
         stage('SonarQube Analysis') {
             steps {
@@ -58,5 +58,4 @@ pipeline {
             }
         }
     }
-  }
 }
