@@ -32,9 +32,15 @@ pipeline {
                 bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
                 bat 'docker push edwardsortiz25/backend-test'
 
-                }
+            }
+             docker.withRegistry('http://localhost:8082','nexus-credentials'){
+                bat 'docker tag backend-test:latest localhost:8082/docker-hosted/backend-test:latest'
+                bat 'docker push localhost:8082/docker-hosted/backend-test:latest'
 
-             }
+            }
+
+
+           }
             
           }
         }
