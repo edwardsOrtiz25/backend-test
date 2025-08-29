@@ -24,7 +24,7 @@ pipeline {
             agent {
                 docker {
                     image 'sonarsource/sonar-scanner-cli'
-                    reuseNode true
+                    args '-v %WORKSPACE%:/usr/src -w /usr/src'
                 }
             }
             steps {
