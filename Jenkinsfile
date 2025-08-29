@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         SONAR_TOKEN = credentials('sonar-token')
-        SONAR_URL = 'https://tuservidorsonar.com'
+        SONAR_URL = 'http://localhost:8084'
     }
 
     stages {
