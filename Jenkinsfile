@@ -30,7 +30,7 @@ pipeline {
              docker.withRegistry('https://docker.io/v1','docker-hub-credentials'){
                 bat 'docker build -t backend-test .'
                 bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
-                bat 'docker push edwardsortiz25/backend-test:tagname'
+                bat 'docker push edwardsortiz25/backend-test'
 
                 }
 
