@@ -5,7 +5,7 @@ pipeline {
             steps {
                 // credentialsId debe coincidir con el Secret File que creaste
                 withKubeConfig([credentialsId: 'k8s-cred']) {
-                    sh 'kubectl get nodes'
+                    bat 'kubectl get nodes'
                 }
             }
         }
