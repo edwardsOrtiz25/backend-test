@@ -29,7 +29,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat 'sonar-scanner'
+                    sh 'sonar-scanner'   // aquí DEBE ser sh porque es dentro del contenedor Linux
                 }
             }
         }
