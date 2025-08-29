@@ -27,7 +27,7 @@ pipeline {
         stage ('Etapa de empaquetado y delivery'){
           steps {
             bat 'docker build -t backend-test .'
-            bat 'docker tag backend-test edwardsortiz25/backend-test'
+            bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
             bat 'docker push edwardsortiz25/backend-test:latest'
           }
         }
