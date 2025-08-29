@@ -18,6 +18,25 @@ pipeline {
                 bat 'npm run build'
             }
         }
+        stage('SonarQue'){
+          agent{
+            docker {
+                image 'sonarsource/sonar-scanner-cli'
+                reuseNode true
+            }
+          }
+          stages{
+            stage('Subir Codigo a Sonarque'){
+               steps{
+                withSonarQubeEnv('SonarQube'){
+                    bat 'sonar-scanner'
+                }
+                
+               }
+            }
+          }
+        }
+
         stage('Check Docker') {
          steps {
         bat 'docker info'
@@ -39,4 +58,5 @@ pipeline {
           }
         }
     }
+}
 }
