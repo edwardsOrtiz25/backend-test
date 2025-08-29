@@ -1,56 +1,81 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "NodeJS"   // Nombre de tu NodeJS configurado en Jenkins
+    }
+
+    environment {
+        // Configuración de SonarQube: el nombre debe coincidir con el que configuraste en Jenkins (Manage Jenkins > System > SonarQube servers)
+        SONARQUBE_SERVER = "MySonarQube"  
+        SCANNER_HOME = "C:\\sonar-scanner\\bin" // Ajusta la ruta a donde tengas sonar-scanner en tu Jenkins
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/edwardsOrtiz25/backend-test.git'
+            }
+        }
+
         stage('Install dependencies') {
             steps {
                 bat 'npm install'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
-                bat 'npm run test:cov'
+                bat 'npm test'
             }
         }
 
-        stage('Build') {
+        stage('Coverage') {
             steps {
-                bat 'npm run build'
+                // Asegura que se cree carpeta coverage
+                bat 'mkdir coverage || echo "carpeta ya existe"'
+                bat 'npm run coverage'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    // Obtener la ruta de SonarQube Scanner configurado en Jenkins
-                    def scannerHome = tool 'SonarQubeScanner' // Nombre de tu instalación en Global Tool Configuration
-                    withSonarQubeEnv('SonarQube') {        // Nombre del servidor SonarQube en Jenkins
-                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" ^
-                            -Dsonar.projectKey=backend-test ^
-                            -Dsonar.sources=. ^
-                            -Dsonar.host.url=http://localhost:8084 ^
-                            -Dsonar.login=%SONARQUBE_AUTH_TOKEN%"
-                    }
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    bat "\"${SCANNER_HOME}\\sonar-scanner.bat\" -Dsonar.projectKey=backend-test -Dsonar.sources=. -Dsonar.host.url=http://localhost:8084 -Dsonar.login=admin -Dsonar.password=admin123"
                 }
             }
         }
 
-        stage('Check Docker') {
+        stage('Build Docker Image') {
             steps {
-                bat 'docker info'
+                script {
+                    docker.build("backend-test:${env.BUILD_NUMBER}")
+                }
             }
         }
 
-        stage('Etapa de empaquetado y delivery') {
+        stage('Publish Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('http://localhost:8082','nexus-credentials'){
-                        bat 'docker tag backend-test:latest localhost:8082/docker-hosted/backend-test:latest'
-                        bat 'docker push localhost:8082/docker-hosted/backend-test:latest'
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image("backend-test:${env.BUILD_NUMBER}").push("latest")
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            junit 'reports/**/*.xml'  // Publicar resultados de tests
+            archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
+        }
+        success {
+            echo "Pipeline completado exitosamente ✅"
+        }
+        failure {
+            echo "El pipeline falló ❌"
         }
     }
 }
