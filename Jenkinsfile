@@ -1,58 +1,52 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS' // usa el nombre configurado en Jenkins
-        maven 'Maven'   // si también configuraste Maven
-    }
-
-    environment {
-        SCANNER_HOME = tool 'SonarQubeScanner'  // Nombre configurado en Manage Jenkins > Tools
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/edwardsOrtiz25/backend-test.git'
-            }
-        }
-
         stage('Install dependencies') {
             steps {
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
-        stage('Run tests') {
+        stage('Test') {
             steps {
-                sh 'npm test -- --coverage'
+                bat 'npm run test:cov'
             }
-            post {
-                always {
-                    junit 'reports/junit/**/*.xml'
-                }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'npm run build'
             }
         }
 
         stage('SonarQube Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli'
+                    reuseNode true
+                }
+            }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh """
-                        ${SCANNER_HOME}/bin/sonar-scanner \
-                          -Dsonar.projectKey=backend-test \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=http://localhost:8084 \
-                          -Dsonar.login=\$SONARQUBE_TOKEN
-                    """
+                    bat 'sonar-scanner'
                 }
             }
         }
 
-        stage("Quality Gate") {
+        stage('Check Docker') {
             steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                bat 'docker info'
+            }
+        }
+
+        stage('Etapa de empaquetado y delivery') {
+            steps {
+                script {
+                    docker.withRegistry('http://localhost:8082', 'nexus-credentials') {
+                        bat 'docker tag backend-test:latest localhost:8082/docker-hosted/backend-test:latest'
+                        bat 'docker push localhost:8082/docker-hosted/backend-test:latest'
+                    }
                 }
             }
         }
