@@ -18,6 +18,11 @@ pipeline {
                 bat 'npm run build'
             }
         }
+        stage('Check Docker') {
+         steps {
+        bat 'docker info'
+          }
+        }
 
         stage ('Etapa de empaquetado y delivery'){
           steps {
