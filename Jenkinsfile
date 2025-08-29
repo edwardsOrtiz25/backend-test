@@ -3,9 +3,20 @@ pipeline {
 
     stages {
         stage('Install dependencies') {
-            steps {
-                bat 'npm install'
+            agent {
+                docker{
+                    image 'node:22'
+                    reuseNode true
+                }
             }
+            stages{
+                stage('NPM install'){
+                    steps {
+                     sh 'npm install'
+                    }
+                }
+            }
+            
         }
         stage('Build') {
             steps {
