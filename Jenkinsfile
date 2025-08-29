@@ -6,10 +6,6 @@ pipeline {
                 sh 'npm install'
             }
         }
-         stage('En Construccion'){
-            steps{
-                echo 'Building....'
-            }
-        }
+        
     }
 }    
