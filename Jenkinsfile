@@ -27,10 +27,10 @@ pipeline {
         stage ('Etapa de empaquetado y delivery'){
           steps {
              script {
-                docker.withRegistry('https://docker.io','docker-hub-credentials'){
-                    bat 'docker build -t backend-test .'
-                    bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
-                    bat 'docker push edwardsortiz25/backend-test:latest'
+             docker.withRegistry('https://docker.io/v1','docker-hub-credentials'){
+                bat 'docker build -t backend-test .'
+                bat 'docker tag backend-test edwardsortiz25/backend-test:latest'
+                bat 'docker push edwardsortiz25/backend-test:latest'
 
                 }
 
