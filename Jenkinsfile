@@ -2,10 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Nexus y Kubernetes
-        NEXUS_URL = 'localhost:8082'          // Solo host:port, sin http:// en tags
-        NEXUS_CRED = 'nexus-credentials'
-        K8S_CRED = 'k8s-cred'
         IMAGE_NAME = 'backend-test'
     }
 
@@ -34,7 +30,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Nombre de la configuración en Jenkins
+                withSonarQubeEnv('SonarQube') {
                     echo "Ejecutando análisis SonarQube con npx..."
                     bat """
                     npx sonarqube-scanner ^
@@ -63,8 +59,7 @@ pipeline {
                 script {
                     echo "Construyendo imagen Docker..."
                     bat "docker build -t %IMAGE_NAME%:latest ."
-                    // Tag usando formato correcto para Docker
-                    bat "docker tag %IMAGE_NAME%:latest %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
+                    bat "docker tag %IMAGE_NAME%:latest localhost:8082/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
                 }
             }
         }
@@ -72,10 +67,11 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    docker.withRegistry("http://%NEXUS_URL%", "%NEXUS_CRED%") {
+                    // Usa directamente el ID literal de la credencial de Jenkins
+                    docker.withRegistry('http://localhost:8082', 'nexus-credentials') {
                         echo "Subiendo imagen Docker con tag latest y build number..."
-                        bat "docker push %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:latest"
-                        bat "docker push %NEXUS_URL%/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
+                        bat "docker push localhost:8082/docker-hosted/%IMAGE_NAME%:latest"
+                        bat "docker push localhost:8082/docker-hosted/%IMAGE_NAME%:${env.BUILD_NUMBER}"
                     }
                 }
             }
@@ -83,7 +79,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([credentialsId: '%K8S_CRED%']) {
+                withKubeConfig([credentialsId: 'k8s-cred']) {
                     echo "Aplicando kubernetes.yaml..."
                     bat "kubectl apply -f kubernetes.yaml"
                     echo "Verificando despliegue..."
