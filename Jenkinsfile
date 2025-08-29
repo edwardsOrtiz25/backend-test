@@ -2,28 +2,14 @@ pipeline {
     agent any
 
     environment {
-        // SonarQube
-        SONAR_TOKEN = credentials('sonar-token')
-        SONAR_URL = 'http://localhost:8084'
-        // Nexus
+        // Variables de Nexus y Kubernetes
         NEXUS_URL = 'http://localhost:8082'
         NEXUS_CRED = 'nexus-credentials'
-        // Kubernetes
         K8S_CRED = 'k8s-cred'
-        // Docker Image
         IMAGE_NAME = 'backend-test'
     }
 
     stages {
-
-        stage('Test SonarQube Connection') {
-            steps {
-                echo "Validando conexión SonarQube..."
-                bat """
-                curl -u %SONAR_TOKEN%: %SONAR_URL%/api/server/version
-                """
-            }
-        }
 
         stage('Install dependencies') {
             steps {
@@ -48,16 +34,18 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                echo "Analizando calidad con SonarQube..."
-                bat """
-                sonar-scanner ^
-                    -Dsonar.projectKey=backend-test ^
-                    -Dsonar.sources=. ^
-                    -Dsonar.host.url=%SONAR_URL% ^
-                    -Dsonar.login=%SONAR_TOKEN% ^
-                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
-                    -Dsonar.coverage.exclusions=node_modules/**,tests/**
-                """
+                withSonarQubeEnv('SonarQube') { // Nombre que le pusiste en "Configure System" del plugin
+                    echo "Ejecutando análisis SonarQube..."
+                    bat """
+                    sonar-scanner ^
+                        -Dsonar.projectKey=backend-test ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.host.url=%SONAR_HOST_URL% ^
+                        -Dsonar.login=%SONAR_AUTH_TOKEN% ^
+                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
+                        -Dsonar.coverage.exclusions=node_modules/**,tests/**
+                    """
+                }
             }
         }
 
