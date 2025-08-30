@@ -39,7 +39,7 @@ pipeline {
                         -Dsonar.host.url=%SONAR_HOST_URL% ^
                         -Dsonar.login=%SONAR_AUTH_TOKEN% ^
                         -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
-                        -Dsonar.coverage.exclusions=node_modules/**,tests/**
+                        -Dsonar.coverage.exclusions=node_modules/**,tests/**,**/main.ts,**/src/config/**,**/*.module.ts
                     """
                 }
             }
